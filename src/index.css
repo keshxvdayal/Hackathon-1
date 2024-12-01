@@ -7,5 +7,46 @@
 }
 
 
+.select{
+  @apply block  px-4 py-2 text-gray-700 bg-transparent border border-gray-300 rounded-md shadow-sm appearance-none focus:outline-none w-[300px] }
 
 
+
+.animate {
+  -webkit-animation: animatezoom 0.5s forwards ;
+   animation: animatezoom 0.5s forwards 
+   
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for Firefox */
+.scrollbar-hidden {
+  scrollbar-width: none;
+}
+
+
+  
+@-webkit-keyframes animatezoom {
+  from {
+    
+    -webkit-transform: scale(0)
+  }
+  to {
+ 
+    -webkit-transform: scale(1)
+  }
+}
+
+@keyframes animatezoom {
+  from {
+
+    transform: scale(0.1);
+  }
+  to {
+    transform: scale(1);
+   
+  }
+}

@@ -1,72 +1,79 @@
+// Updated AuthContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-// Create the AuthContext
 const AuthContext = createContext();
 
-// Base URL for the authentication API
 const AUTH_API_URL = "http://192.168.43.221:8000/";
 
-// AuthProvider component to wrap around the app
 export const AuthProvider = ({ children }) => {
-    const [loggedInName, setLoggedInName] = useState('');
-    const [loggedInId, setLoggedInId] = useState('');
+    const [accessToken, setAccessToken] = useState('');
+    const [refreshToken, setRefreshToken] = useState('');
 
-    // Sync with localStorage to persist authentication state
     useEffect(() => {
-        const handleStorageChange = () => {
-            setLoggedInName(localStorage.getItem('userName'));
-            setLoggedInId(localStorage.getItem('userId'));
-        };
-
-        // Initial fetch from localStorage
-        handleStorageChange();
-
-        // Listen for localStorage changes
-        window.addEventListener('storage', handleStorageChange);
-
-        return () => {
-            window.removeEventListener('storage', handleStorageChange);
-        };
+        const storedAccessToken = localStorage.getItem('accessToken');
+        const storedRefreshToken = localStorage.getItem('refreshToken');
+        if (storedAccessToken && storedRefreshToken) {
+            setAccessToken(storedAccessToken);
+            setRefreshToken(storedRefreshToken);
+        }
     }, []);
 
-    // Function to handle user signup
-    const setUser = async (user) => {
+    const loginUser = async (credentials) => {
         try {
-            const response = await axios.post(`${AUTH_API_URL}signup`, user);
-            return response;
+            const response = await axios.post(`${AUTH_API_URL}api/v1/auth/token/`, credentials);
+            const { access, refresh } = response.data;
+            localStorage.setItem('accessToken', access);
+            localStorage.setItem('refreshToken', refresh);
+            setAccessToken(access);
+            setRefreshToken(refresh);
+            return { success: true };
         } catch (error) {
-            return error.response || { status: 500, message: 'Unknown error occurred' };
+            return { success: false, error: error.response?.data || 'Login failed' };
         }
     };
 
-    // Function to handle user login
-    const getUser = async (user) => {
+    const refreshAccessToken = async () => {
         try {
-            const response = await axios.post(`${AUTH_API_URL}api/v1/auth/token/`, user);
-            return response;
+            const response = await axios.post(`${AUTH_API_URL}api/v1/auth/token/refresh/`, {
+                refresh: refreshToken,
+            });
+            const { access } = response.data;
+            localStorage.setItem('accessToken', access);
+            setAccessToken(access);
         } catch (error) {
-            return error.response || { status: 500, message: 'Unknown error occurred' };
+            console.error('Failed to refresh token', error);
+            logoutUser();
         }
     };
+
+    const logoutUser = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        setAccessToken('');
+        setRefreshToken('');
+    };
+
+    const authAxios = axios.create();
+
+    authAxios.interceptors.request.use(
+        async (config) => {
+            if (!accessToken) return config;
+
+            const isExpired = jwtDecode(accessToken).exp * 1000 < Date.now();
+            if (isExpired) await refreshAccessToken();
+
+            config.headers.Authorization = `Bearer ${localStorage.getItem('accessToken')}`;
+            return config;
+        },
+        (error) => Promise.reject(error)
+    );
 
     return (
-        <AuthContext.Provider
-            value={{
-                setUser,
-                getUser,
-                loggedInId,
-                loggedInName,
-                setLoggedInId,
-                setLoggedInName,
-            }}
-        >
+        <AuthContext.Provider value={{ loginUser, logoutUser, authAxios }}>
             {children}
         </AuthContext.Provider>
     );
 };
 
-// Hook to use AuthContext in components
-export const useAuthContext = () => {
-    return useContext(AuthContext);
-};
+export const useAuthContext = () => useContext(AuthContext);

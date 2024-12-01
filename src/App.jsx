@@ -8,7 +8,11 @@ import UserApp from "./pages/UserApp";
 import TransactionHistory from "./components/TransactionHistory";
 import UserProfile from "./components/UserProfile";
 import FoodMenu from "./components/FoodMenu";
+import Login from "./pages/User/Signin";
+import SignupUser from "./pages/User/Signup";
 import RefreshHandler from "./components/RefreshHandler";
+import Dashboard from "./pages/User/Dashboard";
+import { UserProvider } from "./context/UserContext";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -19,6 +23,7 @@ const App = () => {
 
   return (
     <div className="full">
+      <UserProvider >
       {/* This component handles refresh and authentication state */}
       <RefreshHandler setIsAuthenticated={setIsAuthenticated} />
 
@@ -29,6 +34,11 @@ const App = () => {
         {/* Public routes */}
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<Signup />} />
+
+
+        <Route path="/signinuser" element={<Login />} />
+        <Route path="/signupuser" element={<SignupUser />} />
+        <Route path="/dashboard" element={<Dashboard />} />
 
         {/* Private routes */}
         <Route
@@ -41,6 +51,7 @@ const App = () => {
         />
 
       </Routes>
+      </UserProvider>
     </div>
   );
 };

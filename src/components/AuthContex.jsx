@@ -33,6 +33,20 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const loginUserSpecific = async (credentials) => {
+        try {
+            const response = await axios.post(`${AUTH_API_URL}api/v1/auth/token/user/`, credentials);
+            const { access, refresh } = response.data;
+            localStorage.setItem('userAccessToken', access);
+            localStorage.setItem('userRefreshToken', refresh);
+            setAccessToken(access);
+            setRefreshToken(refresh);
+            return { success: true };
+        } catch (error) {
+            return { success: false, error: error.response?.data || 'User login failed' };
+        }
+    };
+
     const refreshAccessToken = async () => {
         try {
             const response = await axios.post(`${AUTH_API_URL}api/v1/auth/token/refresh/`, {
@@ -70,7 +84,7 @@ export const AuthProvider = ({ children }) => {
     );
 
     return (
-        <AuthContext.Provider value={{ loginUser, logoutUser, authAxios }}>
+        <AuthContext.Provider value={{ loginUser, loginUserSpecific, logoutUser, authAxios }}>
             {children}
         </AuthContext.Provider>
     );

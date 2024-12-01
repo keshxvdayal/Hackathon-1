@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useState } from "react";
 import { handleError, handleSuccess } from "../utils/authUtils";
-import { useAuthContext } from "../components/AuthContex"; // Corrected import
+import { useAuthContext } from "../components/AuthContex";
 import { Link, useNavigate } from "react-router-dom";
 
 const SignIn = () => {
